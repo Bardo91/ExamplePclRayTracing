@@ -28,13 +28,14 @@ int main(int _argc, char **_argv){
     //rayTracer.defineBoundingBox();
 
     viewer.addPointCloud<pcl::PointXYZ>(cloud.makeShared(), "surface");
-    for(unsigned sample = 0 ; sample < 10; sample++ ){
+
+    // VISUALIZATION TEST
+    const int MAX_SAMPLES = 10;
+    for(unsigned sample = 0 ; sample <MAX_SAMPLES ; sample++ ){
         Eigen::Vector3f cameraOrigin =  {float(rand())/RAND_MAX*2-1,1,float(rand())/RAND_MAX*2-1};
         Eigen::Vector3f rayEnd = {float(rand())/RAND_MAX*2-1,-1,float(rand())/RAND_MAX*2-1};
 
         Eigen::Vector3f rayDir = rayEnd - cameraOrigin;
-        //pcl::octree::OctreePointCloudSearch<pcl::PointXYZ>::AlignedPointTVector collisionCenters;
-        //rayTracer.getIntersectedVoxelCenters(cameraOrigin, ejRayDir, collisionCenters);
 
         std::vector<int> indices;
         rayTracer.getIntersectedVoxelIndices(cameraOrigin, rayDir, indices);
@@ -56,6 +57,26 @@ int main(int _argc, char **_argv){
             viewer.setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_COLOR,r,g,b, "sphere"+std::to_string(sample)+std::to_string(p));
         }
     }
+
+
+    //SPEED TEST
+    double  timeAccum = 0;
+    int SPEED_TEST_SAMPLES = 10000;
+    for(unsigned sample = 0 ; sample <SPEED_TEST_SAMPLES ; sample++ ){
+        Eigen::Vector3f cameraOrigin =  {float(rand())/RAND_MAX*2-1,1,float(rand())/RAND_MAX*2-1};
+        Eigen::Vector3f rayEnd = {float(rand())/RAND_MAX*2-1,-1,float(rand())/RAND_MAX*2-1};
+
+        Eigen::Vector3f rayDir = rayEnd - cameraOrigin;
+
+        std::vector<int> indices;
+        auto t0 = std::chrono::high_resolution_clock::now();
+        rayTracer.getIntersectedVoxelIndices(cameraOrigin, rayDir, indices);
+        auto t1 = std::chrono::high_resolution_clock::now();
+        timeAccum += std::chrono::duration_cast<std::chrono::microseconds>(t1-t0).count();
+    }
+
+    timeAccum /=SPEED_TEST_SAMPLES;
+    std::cout <<"AVG. time per sample after " << SPEED_TEST_SAMPLES<< " samples: " << timeAccum << " microseconds." << std::endl;
     while(!viewer.wasStopped()){
         std::this_thread::sleep_for(std::chrono::milliseconds(15));
         viewer.spinOnce(15);
