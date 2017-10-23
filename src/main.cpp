@@ -21,35 +21,46 @@ int main(int _argc, char **_argv){
 
     pcl::visualization::PCLVisualizer viewer("3d viewer");
 
-    double minimumResolutionVoxelTracer = 0.05;
+    double minimumResolutionVoxelTracer = 0.02;
     pcl::octree::OctreePointCloudSearch<pcl::PointXYZ> rayTracer(minimumResolutionVoxelTracer);
     rayTracer.setInputCloud(cloud.makeShared());
-    rayTracer.defineBoundingBox();
-
-    Eigen::Vector3f cameraOrigin =  {0,1,0};
-    Eigen::Vector3f ejRayDir = {0,-1,0};
-
-    //pcl::octree::OctreePointCloudSearch<pcl::PointXYZ>::AlignedPointTVector collisionCenters;
-    //rayTracer.getIntersectedVoxelCenters(cameraOrigin, ejRayDir, collisionCenters);
-
-    std::vector<int> indices;
-    rayTracer.getIntersectedVoxelIndices(cameraOrigin, ejRayDir, indices);
-
-    std::cout << "Raytracing from " <<cameraOrigin.transpose() << ", with direction "  << ejRayDir.transpose()  << ", and resolution of " << minimumResolutionVoxelTracer<<std::endl;
-    std::cout << "Found "<< indices.size() <<"collisions" <<std::endl;
+    rayTracer.addPointsFromInputCloud();
+    //rayTracer.defineBoundingBox();
 
     viewer.addPointCloud<pcl::PointXYZ>(cloud.makeShared(), "surface");
-    pcl::PointXYZ p1(0,1,0);
-    pcl::PointXYZ p2(0,-4,0);
-    viewer.addLine<pcl::PointXYZ>(p1,p2, "ray1");
+    for(unsigned sample = 0 ; sample < 10; sample++ ){
+        Eigen::Vector3f cameraOrigin =  {float(rand())/RAND_MAX*2-1,1,float(rand())/RAND_MAX*2-1};
+        Eigen::Vector3f rayEnd = {float(rand())/RAND_MAX*2-1,-1,float(rand())/RAND_MAX*2-1};
 
-    //for(auto &p: collisionCenters){
-    //    viewer.addSphere(p, 0.1, "sphere"+std::to_string(rand()));
-    //}
+        Eigen::Vector3f rayDir = rayEnd - cameraOrigin;
+        //pcl::octree::OctreePointCloudSearch<pcl::PointXYZ>::AlignedPointTVector collisionCenters;
+        //rayTracer.getIntersectedVoxelCenters(cameraOrigin, ejRayDir, collisionCenters);
+
+        std::vector<int> indices;
+        rayTracer.getIntersectedVoxelIndices(cameraOrigin, rayDir, indices);
+
+        std::cout << "Raytracing from " <<cameraOrigin.transpose() << ", with direction "  << rayDir.transpose()  << ", and resolution of " << minimumResolutionVoxelTracer<<std::endl;
+        std::cout << "Found "<< indices.size() <<"collisions" <<std::endl;
+
+        double r = double(rand())/RAND_MAX;
+        double g = double(rand())/RAND_MAX;
+        double b = double(rand())/RAND_MAX;
+
+        pcl::PointXYZ p1(cameraOrigin[0], cameraOrigin[1], cameraOrigin[2]);
+        pcl::PointXYZ p2(rayEnd[0], rayEnd[1], rayEnd[2]);
+        viewer.addLine<pcl::PointXYZ>(p1,p2, "ray_"+std::to_string(sample));
+        viewer.setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_COLOR,r,g,b, "ray_"+std::to_string(sample));
+
+        for(auto &p: indices){
+            viewer.addSphere(cloud[p], stepSize, "sphere"+std::to_string(sample)+std::to_string(p));
+            viewer.setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_COLOR,r,g,b, "sphere"+std::to_string(sample)+std::to_string(p));
+        }
+    }
     while(!viewer.wasStopped()){
         std::this_thread::sleep_for(std::chrono::milliseconds(15));
         viewer.spinOnce(15);
     }
+
 
 
 }
