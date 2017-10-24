@@ -50,7 +50,22 @@ endif()
 set(PROJECT_NAME testraytracing)
 add_definitions(-std=c++11)
 # Collect all sources
-file(GLOB_RECURSE RGDBTOOLS_SOURCE_FILES "src/*.cpp" "src/*.h" "src/*.inl" "src/*.c")
+file(GLOB_RECURSE RGDBTOOLS_SOURCE_FILES "src/main.cpp")
+
+add_executable(${PROJECT_NAME} ${RGDBTOOLS_SOURCE_FILES})
+target_include_directories(${PROJECT_NAME} PUBLIC ${PROJECT_SOURCE_DIR}/rgbd_tools)
+
+target_include_directories(${PROJECT_NAME} PUBLIC ${OpenCV_INCLUDE_DIRS})
+target_link_libraries(${PROJECT_NAME} LINK_PUBLIC ${OpenCV_LIBS})
+
+target_include_directories(${PROJECT_NAME} PUBLIC ${PCL_INCLUDE_DIRS})
+target_link_libraries(${PROJECT_NAME} LINK_PUBLIC ${PCL_LIBRARIES})
+
+###############################
+set(PROJECT_NAME testraytracing2)
+add_definitions(-std=c++11)
+# Collect all sources
+file(GLOB_RECURSE RGDBTOOLS_SOURCE_FILES "src/main2.cpp")
 
 add_executable(${PROJECT_NAME} ${RGDBTOOLS_SOURCE_FILES})
 target_include_directories(${PROJECT_NAME} PUBLIC ${PROJECT_SOURCE_DIR}/rgbd_tools)
